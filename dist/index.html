@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Квартиры — аренда в Уфе</title>
+  <title>Квартира рядом — аренда в Уфе</title>
   <meta name="description" content="Учебное приложение на Vue: поиск квартир в Уфе, фильтры и избранное.">
   <link rel="stylesheet" href="style.css">
   <script type="module" src="app.js"></script>
@@ -11,7 +11,7 @@
 <body>
 <div id="app" v-cloak>
   <header class="header">
-    <a class="brand" href="./" aria-label="Квартиры — главная"><span class="brand-icon">⌂</span> квартиры<span class="brand-dot">.</span></a>
+    <a class="brand" href="./" aria-label="Квартира рядом — главная"><span class="brand-icon">⌂</span> Квартира рядом</a>
     <span class="city"><span>●</span> Уфа</span>
     <nav aria-label="Разделы">
       <button :class="{active: !favoritesOnly}" @click="favoritesOnly = false">Все объявления</button>
@@ -48,7 +48,7 @@
     </section>
     <p class="data-note" v-if="updatedAt">Подборка с <a :href="source" target="_blank" rel="noopener">Move.ru ↗</a> · Загружена {{ new Date(updatedAt).toLocaleDateString('ru-RU') }}. Доступность и условия уточняйте в исходном объявлении.</p>
   </main>
-  <footer><span>квартиры. <span class="muted">Учебный проект на Vue</span></span><a href="project.zip" download>Скачать код и памятку ↓</a></footer>
+  <footer><span>Квартира рядом <span class="muted">Учебный проект на Vue</span></span><a href="project.zip" download>Скачать код и памятку ↓</a></footer>
   <dialog ref="detailsDialog" @click="backdropClick" @close="selected = null">
     <template v-if="selected">
       <button class="close" @click="closeDetails" aria-label="Закрыть">×</button>
