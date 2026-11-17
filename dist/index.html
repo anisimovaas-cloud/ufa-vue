@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Квартиры — аренда в Уфе</title>
+  <meta name="description" content="Учебное приложение на Vue: поиск квартир в Уфе, фильтры и избранное.">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+<div id="app" v-cloak>
+  <header class="header">
+    <a class="brand" href="./" aria-label="Квартиры — главная"><span class="brand-icon">⌂</span> квартиры<span class="brand-dot">.</span></a>
+    <span class="city"><span>●</span> Уфа</span>
+    <nav aria-label="Разделы">
+      <button :class="{active: !favoritesOnly}" @click="favoritesOnly = false">Все объявления</button>
+      <button :class="{active: favoritesOnly}" @click="favoritesOnly = true">Избранное <span class="badge">{{ favorites.length }}</span></button>
+    </nav>
+  </header>
+  <main>
+    <section class="intro">
+      <p class="eyebrow">ДОЛГОСРОЧНАЯ АРЕНДА · УФА</p>
+      <h1>{{ favoritesOnly ? 'Квартиры, которые понравились' : 'Найдите квартиру для себя' }}</h1>
+      <p>{{ favoritesOnly ? 'Сохранённые варианты всегда под рукой.' : 'Выберите район, количество комнат и подходящую цену.' }}</p>
+    </section>
+    <section class="filters" aria-label="Поиск и фильтры">
+      <label class="search"><span>Поиск по названию</span><div class="input-icon"><span aria-hidden="true">⌕</span><input v-model="query" placeholder="Например, 2-комн. квартира" type="search"></div></label>
+      <div class="filter-grid">
+        <label><span>Цена от, ₽ / месяц</span><input v-model="minPrice" type="number" min="0" placeholder="От"></label>
+        <label><span>Цена до, ₽ / месяц</span><input v-model="maxPrice" type="number" min="0" placeholder="До"></label>
+        <label><span>Комнаты</span><select v-model="rooms"><option value="">Любое количество</option><option value="0">Студия</option><option v-for="n in [1,2,3,4]" :value="String(n)">{{ n === 4 ? '4 и больше' : n }}</option></select></label>
+        <label><span>Район</span><select v-model="district"><option value="">Все районы</option><option v-for="name in districts" :value="name">{{ name }}</option></select></label>
+        <button class="reset" @click="reset">Сбросить</button>
+      </div>
+      <p v-if="minPrice && maxPrice && Number(minPrice) > Number(maxPrice)" class="field-error">Цена «от» должна быть меньше цены «до».</p>
+    </section>
+    <section aria-label="Объявления" aria-live="polite">
+      <div class="results-heading"><h2>{{ favoritesOnly ? 'Избранное' : 'Квартиры в Уфе' }} <span>{{ filtered.length }}</span></h2><span class="muted">{{ loading ? 'Загружаем…' : 'Найдено объявлений: ' + filtered.length }}</span></div>
+      <div v-if="error" class="empty"><h3>Не удалось загрузить объявления</h3><p>{{ error }}</p><button class="primary" @click="loadListings">Попробовать ещё раз</button></div>
+      <div v-else-if="!loading && !filtered.length" class="empty"><span class="empty-icon">⌕</span><h3>{{ favoritesOnly && !favorites.length ? 'Пока ничего не сохранено' : 'Объявления не найдены' }}</h3><p>{{ favoritesOnly && !favorites.length ? 'Нажмите на сердечко в карточке, чтобы добавить квартиру.' : 'Попробуйте изменить запрос или сбросить фильтры.' }}</p><button class="primary" @click="favoritesOnly && !favorites.length ? favoritesOnly = false : reset()">{{ favoritesOnly && !favorites.length ? 'Посмотреть квартиры' : 'Сбросить фильтры' }}</button></div>
+      <div class="cards">
+        <article v-for="item in filtered" :key="item.id" class="card">
+          <div class="photo-wrap"><button class="photo-button" @click="openDetails(item)" :aria-label="'Подробнее: ' + (item.title || 'Квартира')"><img v-if="item.photos?.length" :src="item.photos[0]" :alt="item.title || 'Фото квартиры'" loading="lazy" @error="imageError"><span v-else class="no-photo">Фотографии нет</span></button><span class="photo-count" v-if="item.photos?.length">{{ item.photos.length }} фото</span><button class="heart" :class="{saved: favorites.includes(item.id)}" @click="toggleFavorite(item.id)" :aria-pressed="favorites.includes(item.id)" :aria-label="favorites.includes(item.id) ? 'Убрать из избранного' : 'Добавить в избранное'">{{ favorites.includes(item.id) ? '♥' : '♡' }}</button></div>
+          <div class="card-body"><div class="price">{{ price(item.price) }} <span v-if="item.price != null">/ месяц</span></div><h3><button @click="openDetails(item)">{{ item.title || 'Квартира без названия' }}</button></h3><p class="address">{{ item.address || 'Адрес не указан' }}</p><div class="facts"><span>{{ item.district ? item.district + ' район' : 'Район не указан' }}</span><span>{{ item.area != null ? item.area + ' м²' : 'Площадь не указана' }}</span><span>{{ roomLabel(item.rooms) }}</span></div><p class="description">{{ item.description || 'Описание не добавлено.' }}</p><button class="details" @click="openDetails(item)">Подробнее <span aria-hidden="true">↗</span></button></div>
+        </article>
+      </div>
+    </section>
+    <p class="data-note" v-if="updatedAt">Подборка с <a :href="source" target="_blank" rel="noopener">Move.ru ↗</a> · Загружена {{ new Date(updatedAt).toLocaleDateString('ru-RU') }}. Доступность и условия уточняйте в исходном объявлении.</p>
+  </main>
+  <footer><span>квартиры. <span class="muted">Учебный проект на Vue</span></span><a href="project.zip" download>Скачать код и памятку ↓</a></footer>
+  <dialog ref="detailsDialog" @click="backdropClick" @close="selected = null">
+    <template v-if="selected">
+      <button class="close" @click="closeDetails" aria-label="Закрыть">×</button>
+      <div class="modal-photo"><img v-if="selected.photos?.length" :src="selected.photos[photoIndex]" :alt="'Фото квартиры ' + (photoIndex + 1)" @error="imageError"><span v-else class="no-photo">Фотографии нет</span></div>
+      <div class="thumbnails" v-if="selected.photos?.length > 1"><button v-for="(photo,i) in selected.photos" :class="{chosen: photoIndex === i}" @click="photoIndex = i" :aria-label="'Фото ' + (i+1)"><img :src="photo" alt="" @error="imageError"></button></div>
+      <div class="modal-body"><p class="eyebrow">АРЕНДА · УФА</p><h2>{{ selected.title || 'Квартира без названия' }}</h2><p class="address">{{ selected.address || 'Адрес не указан' }}</p><p class="price">{{ price(selected.price) }} <span v-if="selected.price != null">/ месяц</span></p><div class="modal-facts"><span><small>Район</small>{{ selected.district || 'Не указан' }}</span><span><small>Комнаты</small>{{ roomLabel(selected.rooms) }}</span><span><small>Площадь</small>{{ selected.area != null ? selected.area + ' м²' : 'Не указана' }}</span></div><h3>Описание</h3><p class="full-description">{{ selected.description || 'Описание не добавлено.' }}</p><div class="modal-actions"><button class="primary" @click="toggleFavorite(selected.id)">{{ favorites.includes(selected.id) ? '♥ В избранном' : '♡ В избранное' }}</button><a v-if="selected.url" :href="selected.url" target="_blank" rel="noopener">Объявление на Move.ru ↗</a></div></div>
+    </template>
+  </dialog>
+</div>
+<noscript>Для работы приложения включите JavaScript.</noscript>
+</body>
+</html>
